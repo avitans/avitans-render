@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>סיכום הזמנה</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; direction: rtl; text-align: right; max-width: 800px; margin: auto; }
+    h1, h2 { text-align: center; }
+    img.logo { height: 50px; display: block; margin: auto; }
+    .section { margin: 2rem 0; }
+    .section h3 { margin-bottom: 0.5rem; border-bottom: 1px solid #ccc; padding-bottom: 0.3rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    .photos img { max-height: 150px; margin: 10px; border: 1px solid #ccc; }
+    .center { text-align: center; }
+  </style>
+</head>
+<body>
+  <img src="/public/logo.png" alt="AVITANS Logo" class="logo">
+  <h1>סיכום הזמנה</h1>
+  <div id="content"></div>
+  <div class="center">
+    <button onclick="window.print()">הדפס</button>
+  </div>
+
+  <script>
+    const id = new URLSearchParams(window.location.search).get("id");
+
+    Promise.all([
+      fetch("/api/orders/" + id).then(r => r.json()),
+      fetch("/api/orders/" + id + "/images").then(r => r.json()),
+      fetch("/api/client-from-order/" + id).then(r => r.json())
+    ]).then(([order, images, client]) => {
+      const container = document.getElementById("content");
+      const totalPaid = client.ledger
+        .filter(l => l.amount > 0)
+        .reduce((sum, l) => sum + l.amount, 0);
+      const balance = order.price - totalPaid;
+
+      container.innerHTML = `
+        <div class="section">
+          <h3>פרטי לקוח</h3>
+          <p><strong>שם:</strong> ${client.name}</p>
+          <p><strong>טלפון:</strong> ${client.phone}</p>
+        </div>
+        <div class="section">
+          <h3>פרטי הזמנה</h3>
+          <p><strong>מספר הזמנה:</strong> ${order.id}</p>
+          <p><strong>תאריך:</strong> ${order.date}</p>
+          <p><strong>מתפרה:</strong> ${order.seamstress_name}</p>
+          <p><strong>סטטוס:</strong> ${order.status}</p>
+          <p><strong>מחיר:</strong> ${order.price} ₪</p>
+        </div>
+        <div class="section">
+          <h3>תמונות</h3>
+          <div class="photos">
+            <img src="/uploads/${order.fabric_photo}" alt="בד">
+            <img src="/uploads/${order.style_photo}" alt="סגנון">
+            ${images.map(img => `<img src="/uploads/${img.filename}" alt="נוספות">`).join('')}
+          </div>
+        </div>
+        <div class="section">
+          <h3>תשלומים</h3>
+          <p><strong>שולם:</strong> ${totalPaid} ₪</p>
+          <p><strong>יתרה לתשלום:</strong> ${balance} ₪</p>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

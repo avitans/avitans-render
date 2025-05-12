@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>לדג'ר לקוח</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; direction: rtl; text-align: right; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background-color: #f0f0f0; }
+    form { margin-top: 2rem; background: #f9f9f9; padding: 1rem; border-radius: 8px; max-width: 500px; }
+    input, textarea, button { width: 100%; padding: 8px; margin-top: 0.5rem; }
+    label { margin-top: 1rem; display: block; }
+  </style>
+</head>
+<body>
+  <h1>פירוט חשבון לקוח</h1>
+  <div id="client-name"></div>
+
+  <form id="payment-form" style="max-width: 350px; background: #eef;">
+    <h3 style="font-size: 1rem; margin: 0 0 0.5rem;">הוספת תשלום ללקוח</h3>
+    <label>סכום:</label>
+    <input type="number" name="amount" required>
+    <label>שיטת תשלום:</label><input name="method" placeholder="מזומן / ביט / אשראי" required><label>תיאור:</label>
+    <textarea name="description" required>תשלום שהתקבל</textarea>
+    <button type="submit">הוסף תשלום</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr><th>תאריך</th><th>תיאור</th><th>סכום</th></tr>
+    </thead>
+    <tbody id="ledger-rows"></tbody>
+  </table>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get("id");
+
+    fetch(`/api/client/${clientId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("client-name").innerText = "לקוח: " + data.name + " (" + data.phone + ")";
+        const rows = data.ledger.map(row =>
+          `<tr><td>${row.date}</td><td>${row.description}</td><td>${row.amount}</td></tr>`
+        ).join('');
+        document.getElementById("ledger-rows").innerHTML = rows;
+      });
+
+    document.getElementById("payment-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const amount = formData.get("amount");
+      const description = formData.get("description");
+
+      fetch(`/api/client/${clientId}/payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, description })
+      }).then(res => res.json()).then(r => {
+        if (r.success) location.reload();
+      });
+    });
+  </script>
+</body>
+</html>
