@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>פרטי הזמנה</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; direction: rtl; text-align: right; }
+    img { max-height: 200px; margin: 1rem 0; }
+    label { display: block; margin-top: 1rem; }
+    select, input[type="number"] { padding: 5px; }
+    .field { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>פרטי הזמנה</h1>
+  <div id="details"></div>
+
+  <script>
+    const id = new URLSearchParams(window.location.search).get('id');
+
+    fetch('/api/orders/' + id)
+      .then(res => res.json())
+      .then(order => {
+        const orderDate = new Date(order.date);
+        const today = new Date();
+        const days = order.status === 'סופק'
+          ? Math.ceil((new Date(order.supplied_date || today) - orderDate) / (1000 * 60 * 60 * 24))
+          : Math.ceil((today - orderDate) / (1000 * 60 * 60 * 24));
+
+        document.getElementById('details').innerHTML = `
+          <div class="field"><strong>תאריך:</strong> ${order.date}</div>
+          <div class="field"><strong>לקוח:</strong> ${order.client_name}</div>
+          <div class="field"><strong>תופרת:</strong> ${order.seamstress_name}</div>
+          <div class="field"><strong>סטטוס:</strong>
+            <select id="status">
+              <option value="מוזמן" ${order.status === 'מוזמן' ? 'selected' : ''}>מוזמן</option>
+              <option value="בעבודה" ${order.status === 'בעבודה' ? 'selected' : ''}>בעבודה</option>
+              <option value="מוכן" ${order.status === 'מוכן' ? 'selected' : ''}>מוכן</option>
+              <option value="סופק" ${order.status === 'סופק' ? 'selected' : ''}>סופק</option>
+            </select>
+          </div>
+          <div class="field"><strong>מחיר:</strong>
+            <input type="number" id="price" value="${order.price}" step="0.01">
+          </div>
+          <div class="field"><strong>ימים בטיפול:</strong> ${days}</div>
+          <div class="field"><strong>תמונת בד:</strong><br>
+            <img src="/uploads/${order.fabric_photo}">
+          </div>
+          <div class="field"><strong>תמונת סגנון:</strong><br>
+            <img src="/uploads/${order.style_photo}">
+          </div>
+          <button onclick="saveChanges()">שמור</button>
+        `;
+      });
+
+    function saveChanges() {
+      const newStatus = document.getElementById('status').value;
+      const newPrice = document.getElementById('price').value;
+      fetch('/api/orders/' + id + '/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, price: newPrice })
+      }).then(res => res.json()).then(r => {
+        if (r.success) alert("עודכן בהצלחה");
+      });
+    }
+  </script>
+
+  <h2>תמונות נוספות</h2>
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" required>
+    <button type="submit">העלה תמונה</button>
+  </form>
+  <div id="gallery"></div>
+
+  <h2>היסטוריית סטטוסים</h2>
+  <ul id="status-history"></ul>
+
+  <script>
+    // Load additional images
+    fetch(`/api/orders/${id}/images`)
+      .then(res => res.json())
+      .then(images => {
+        const gallery = images.map(img => \`<img src="/uploads/\${img.filename}" style="max-height:100px; margin:5px;">\`).join('');
+        document.getElementById('gallery').innerHTML = gallery;
+      });
+
+    // Load status history
+    fetch(`/api/orders/${id}/history`)
+      .then(res => res.json())
+      .then(history => {
+        const list = history.map(item => \`<li>\${item.date}: \${item.status}</li>\`).join('');
+        document.getElementById('status-history').innerHTML = list;
+      });
+
+    // Upload image
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch(`/api/orders/${id}/upload`, {
+        method: 'POST',
+        body: formData
+      }).then(res => res.json()).then(r => {
+        if (r.success) location.reload();
+      });
+    });
+  </script>
+</body>
+</html>
+
+</html>

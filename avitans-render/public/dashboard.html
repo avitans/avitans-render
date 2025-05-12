@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>לוח ניהול - גל אביטן</title>
+  <style>
+    body { font-family: Arial; margin: 0; padding: 2rem; direction: rtl; background: #f4f4f4; }
+    h1 { text-align: center; margin-bottom: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: 0.2s ease;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .card span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+    .quick-links { margin-top: 2rem; }
+    .quick-links ul { list-style: none; padding: 0; }
+    .quick-links li { margin: 5px 0; }
+    .quick-links a { text-decoration: none; color: #007bff; }
+  </style>
+</head>
+<body>
+  <h1>מערכת ניהול - גל אביטן</h1>
+
+  <div class="grid">
+    <a href="orders.html" class="card"><span>📋</span>ניהול הזמנות</a>
+    <a href="new-order.html" class="card"><span>➕</span>הזמנה חדשה</a>
+    <a href="clients.html" class="card"><span>👤</span>לקוחות</a>
+    <a href="client.html?id=1" class="card"><span>🧾</span>לדג'ר לקוח</a>
+    <a href="#" class="card"><span>🧵</span>תופרות (בקרוב)</a>
+  </div>
+
+  <div class="quick-links">
+    <h3>קישורים מהירים</h3>
+    <ul>
+      <li><a href="orders.html">רשימת הזמנות</a></li>
+      <li><a href="new-order.html">צור הזמנה חדשה</a></li>
+      <li><a href="clients.html">צפייה בלקוחות</a></li>
+    </ul>
+  </div>
+</body>
+</html>
