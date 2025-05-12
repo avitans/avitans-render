@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>הזמנה חדשה</title>
+  <style>
+    body { font-family: Arial; padding: 2rem; direction: rtl; text-align: right; }
+    label { display: block; margin-top: 1rem; }
+    input, select { width: 100%; padding: 8px; }
+    button { margin-top: 1.5rem; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>יצירת הזמנה חדשה</h1>
+  <form id="order-form" enctype="multipart/form-data">
+    <label>לקוח:</label>
+    <select name="client_id" id="client-select"></select>
+
+    <label>תופרת:</label>
+    <select name="seamstress_id" id="seamstress-select"></select>
+
+    <label>מחיר ההזמנה (₪):</label>
+<input type="number" name="price" step="0.01" required>
+
+<label>סטטוס:</label>
+    <select name="status">
+      <option value="מוזמן">מוזמן</option>
+      <option value="בעבודה">בעבודה</option>
+      <option value="מוכן">מוכן</option>
+      <option value="סופק">סופק</option>
+    </select>
+
+    <label>תמונת בד:</label>
+    <input type="file" name="fabric_photo" accept="image/*">
+
+    <label>תמונת סגנון:</label>
+    <input type="file" name="style_photo" accept="image/*">
+
+    <button type="submit">שמור הזמנה</button>
+  </form>
+
+  <script>
+    // Load clients and seamstresses
+    fetch('/api/clients').then(res => res.json()).then(data => {
+      document.getElementById('client-select').innerHTML =
+        data.map(c => `<option value="\${c.id}">\${c.name}</option>`).join('');
+    });
+    fetch('/api/seamstresses').then(res => res.json()).then(data => {
+      document.getElementById('seamstress-select').innerHTML =
+        data.map(s => `<option value="\${s.id}">\${s.name}</option>`).join('');
+    });
+
+    document.getElementById('order-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch('/api/orders', {
+        method: 'POST',
+        body: formData
+      }).then(res => res.json()).then(result => {
+        alert('ההזמנה נשמרה בהצלחה!');
+        window.location.href = '/';
+      });
+    });
+  </script>
+</body>
+</html>
