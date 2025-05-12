@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>הזמנות</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #fff; direction: rtl; }
+    h1 { margin-bottom: 1rem; }
+    form { max-width: 600px; background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    input, select, button { width: 100%; padding: 8px; margin-top: 0.3rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: right; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>הזמנות</h1>
+
+  <form id="order-form">
+    <label>לקוח</label>
+    <select name="client_id" id="client-select"></select>
+
+    <label>מחיר</label>
+    <input type="number" name="price" required />
+
+    <label>שם מתפרה</label>
+    <input type="text" name="seamstress_name" required />
+
+    <label>תמונת בד</label>
+    <input type="file" name="fabric_photo" required />
+
+    <label>תמונת סגנון</label>
+    <input type="file" name="style_photo" required />
+
+    <button type="submit">צור הזמנה</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>מס׳</th>
+        <th>לקוח</th>
+        <th>מתפרה</th>
+        <th>מחיר</th>
+        <th>סטטוס</th>
+      </tr>
+    </thead>
+    <tbody id="order-list"></tbody>
+  </table>
+
+  <script>
+    fetch('/api/clients')
+      .then(res => res.json())
+      .then(data => {
+        const options = data.map(c => `<option value="\${c.id}">\${c.name}</option>`).join('');
+        document.getElementById("client-select").innerHTML = options;
+      });
+
+    document.getElementById("order-form").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      fetch("/api/orders", {
+        method: "POST",
+        body: formData
+      }).then(res => res.json()).then(() => location.reload());
+    });
+
+    fetch('/api/orders')
+      .then(res => res.json())
+      .then(data => {
+        const rows = data.map(o => \`
+          <tr>
+            <td>\${o.id}</td>
+            <td>\${o.client_name}</td>
+            <td>\${o.seamstress_name}</td>
+            <td>\${o.price}</td>
+            <td>\${o.status}</td>
+          </tr>\`).join('');
+        document.getElementById("order-list").innerHTML = rows;
+      });
+  </script>
+</body>
+</html>
